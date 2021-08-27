@@ -1,0 +1,157 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font: normal 16px sans-serif;
+    padding: 0;
+    background: #232323;
+}
+
+container {
+    margin: 0 auto;
+    padding: 100px 50px;
+    color: #585656;
+    text-align: center;
+}
+
+.eventCalendar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tabsContainer {
+    margin: 20px;
+}
+
+.tabsContainer span {
+    font-size: 18px;
+    color: #1da7da;
+    margin: 20px;
+    cursor: pointer;
+}
+
+.createContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.createContainer > * {
+    margin-top: 20px;
+}
+
+.createEventButton {
+    color: #495057;
+    padding: 5px;
+    font-size: 16px;
+    width: 300px;
+}
+
+.reminderText {
+    width: 300px;
+    border-radius: 4px;
+    padding: 3px;
+}
+
+.datepicker {
+    padding: 6px 12px;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.showEventContainer {
+    display: flex;
+    flex-direction: column;
+    width: 600px;
+}
+
+.line {
+    display: flex;
+    border: 1px solid white;
+    width: 100%;
+    padding: 10px;
+}
+
+.cell {
+    width: 25%;
+}
+
+.line button {
+    color: #495057;
+}
+
+.modalContainer {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modalContent {
+    background: #00BFFF;
+    border-radius: 4px;
+    margin: 20% auto;
+    width: 30%;
+    box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.2), 0 7px 20px 0 rgba(0, 0, 0, 0.17);
+    display: flex;
+    flex-direction: column;
+}
+
+.modalHeader {
+    padding: 15px;
+    color: #fff;
+    display: flex;
+    flex-basis: 25%;
+}
+
+.modalTitle {
+    flex-basis: 90%;
+    margin-left: 41%;
+    font-size: 22px;
+}
+
+.closeIcon {
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.closeIcon:hover {
+    color: #232323;
+}
+
+.modalBody {
+    flex-basis: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.modalBody > * {
+    margin-bottom: 20px;
+}
+
+.modalFooter {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modalFooter button {
+    width: 100px;
+    color: #495057;
+}
+
