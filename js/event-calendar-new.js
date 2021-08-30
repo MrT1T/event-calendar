@@ -18,12 +18,6 @@ function checkMinutes(i) {
         // add watch
         startTime();
         let eventList = [];
-        // add observer
-        const config = {
-            attributes: true,
-            childList: true,
-            subtree: true
-        };
 
         const checkEventDate = () => {
             const nowDate = new Date();
@@ -38,7 +32,9 @@ function checkMinutes(i) {
             console.log(eventList);
         }
 
-        let observer = new MutationObserver(checkEventDate);
+        // add observer
+        const observer = new MutationObserver(checkEventDate);
+        const config = {childList: true};
         const target = document.getElementById('watch');
         observer.observe(target, config);
 
