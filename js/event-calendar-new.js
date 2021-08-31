@@ -1,48 +1,37 @@
-function startTime() {
-    const tm = new Date();
-    const date = tm.toDateString();
-    const h = tm.getHours();
-    let m = tm.getMinutes();
-    m = checkMinutes(m);
-    document.getElementById('watch').innerHTML = `${date} <br/> ${h}:${m}`;
-    setTimeout('startTime()', 30000);
-}
-
-function checkMinutes(i) {
-    if (i < 10) i = "0" + i;
-    return i;
-}
+Date.prototype.getWeek = function () {
+    const firstJan = new Date(this.getFullYear(), 0, 1);
+    const currentDay = new Date(this.getFullYear(), this.getMonth(), this.getDate());
+    const dayOfYear = ((currentDay - firstJan + 86400000) / 86400000);
+    return Math.ceil(dayOfYear / 7)
+};
 
 (function (window) {
     function library() {
-        // add watch
-        startTime();
-        let eventList = [];
 
         const checkEventDate = () => {
             const nowDate = new Date();
-            eventList = eventList.filter(event => {
-                if (event.time <= nowDate) {
+            Object.keys(localStorage).map(key => {
+                const event = JSON.parse(localStorage.getItem(key));
+                if (new Date(event.time) <= nowDate) {
                     console.log(`Name of event is ${event.name}`);
-                    event.callback();
-                    return false;
+                    console.log(event.message);
+                    localStorage.removeItem(key);
                 }
-                return true;
             })
-            console.log(eventList);
         }
 
-        // add observer
-        const observer = new MutationObserver(checkEventDate);
-        const config = {childList: true};
-        const target = document.getElementById('watch');
-        observer.observe(target, config);
+        setTimeout(function timer() {
+            checkEventDate();
+            setTimeout(timer, 30000);
+        }, 0);
 
-        const addEvent = (name, callback, eventTime) => {
-            const time = new Date(eventTime);
+
+        const addEvent = (name, message, time) => {
+            const eventTime = new Date(time);
             const nowDate = new Date();
-            if (nowDate > time) return console.error('The specified callback date is less than the current date.');
-            eventList.push({name, callback, time});
+            if (nowDate > eventTime) return console.error('The specified callback date is less than the current date.');
+            const id = (localStorage.length + 1).toString();
+            localStorage.setItem(id, JSON.stringify({name, message, time}));
         }
 
         const getEventList = ({
@@ -53,32 +42,50 @@ function checkMinutes(i) {
                                   month = null
                               } = {}) => {
             if (startTime > endTime) return console.error('Start time is greater than end time. ');
+            if (localStorage.length === 0) return console.log('Event list is empty');
+
             const checkStartTime = (time) => startTime ? new Date(startTime) <= time : true;
             const checkEndTime = (time) => endTime ? time <= new Date(endTime) : true;
-            return eventList.length === 0 ?
-                console.log('Event list is empty')
-                : eventList.filter(event => checkStartTime(event.time) && checkEndTime(event.time));
-        }
+            const checkDay = (time) => day ? time.getDay() === new Date(day).getDay() : true;
+            const checkWeek = (time) => week ? time.getWeek() === week : true;
+            const checkMonth = (time) => month ? (time.getMonth() + 1) === month : true;
+            const checkDate = (time) => checkStartTime(time) && checkEndTime(time)
+                && checkDay(time) && checkMonth(time) && checkWeek(time);
 
-        const deleteEvent = (name) => {
-            eventList = eventList.filter(event => event.name !== name)
-        }
-
-        const changeEvent = ({name, newName = null, newTime = null} = {}) => {
-            if (eventList.length === 0) return console.error('Event list is empty');
-            if (!name) return console.error("You haven't entered the name of the event.");
-            if (!eventList.some(event => event.name === name)) {
-                return console.error("There is no event with this name.");
-            }
-            const changeName = (oldName) => newName ? newName : oldName;
-            const changeTime = (oldTime) => newTime ? new Date(newTime) : oldTime;
-            eventList = eventList.map(event => {
-                if (event.name === name) {
-                    event.name = changeName(event.name)
-                    event.time = changeTime(event.time)
+            const eventList = Object.keys(localStorage).map(key => {
+                const event = JSON.parse(localStorage.getItem(key));
+                const time = new Date(event.time);
+                if (checkDate(time)) {
+                    return {id: key, ...event}
                 }
-                return event;
-            })
+            });
+
+            return typeof (eventList[0]) === 'undefined'
+                ? console.log('No results were found for your search.') : eventList;
+        }
+
+        const deleteEvent = (id) => {
+            if (!localStorage.getItem(id)) return console.error('There is no event with this id');
+            localStorage.removeItem(id);
+            return console.log('You have deleted an event')
+        }
+
+        const changeEvent = ({id, newName = null, newTime = null} = {}) => {
+            if (localStorage.length === 0) return console.error('Event list is empty');
+            if (!id) return console.error("You haven't entered the id of the event.");
+            const event = JSON.parse(localStorage.getItem(id));
+            if (!event) return console.error('There is no event with this id');
+
+            const changeName = (oldName) => newName ? newName : oldName;
+            const changeTime = (oldTime) => newTime ? newTime : oldTime;
+
+            event.name = changeName(event.name);
+            event.time = changeTime(event.time);
+
+            localStorage.removeItem(id);
+            localStorage.setItem(id, JSON.stringify({...event}))
+
+            console.log('The event has been changed')
         }
         return {addEvent, getEventList, deleteEvent, changeEvent};
     }
