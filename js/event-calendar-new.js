@@ -20,9 +20,10 @@ Date.prototype.getEndDayWeek = function (week) {
         if (localStorage.length !== 0) {
             Object.keys(localStorage).map(key => {
                 const id = parseInt(key);
+                const eventIndex = eventList.findIndex(item => item.id === `${id}`)
+
                 if (!key.includes('callback')) {
                     const event = JSON.parse(localStorage.getItem(key));
-                    const eventIndex = eventList.findIndex(item => item.id === `${id}`)
 
                     if (eventIndex !== -1) {
                         eventList[eventIndex].name = event.name;
@@ -32,7 +33,6 @@ Date.prototype.getEndDayWeek = function (week) {
                     }
 
                 } else {
-                    const eventIndex = eventList.findIndex(item => item.id === `${id}`)
 
                     if (eventIndex !== -1) {
                         eventList[eventIndex].callback = localStorage.getItem(key);
