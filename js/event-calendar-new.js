@@ -24,21 +24,19 @@ class ValidationService {
   }
 
   #isId (id) {
-    let result = true
     if (!id) {
       console.error('You have not entered an id')
-      result = false
+      return false
     }
-    return result
+    return true
   }
 
   #isEventListEmpty (eventList) {
-    let result = false
     if (eventList.length === 0) {
       console.error('Event list is empty')
-      result = true
+      return true
     }
-    return result
+    return false
   }
 
   isAddEvent (name, callback, time) {
@@ -132,12 +130,12 @@ class ValidationService {
     const getDate = () => new Date()
     const setDate = time => new Date(time)
 
-    const makeEvent = (key, name, callback) => {
+    const makeEvent = ({id, name, callback}) => {
       console.log(`Name of event is ${name}`)
       eval(callback)()
-      localStorage.removeItem(key)
-      localStorage.removeItem(`${key}_callback`)
-      eventList = eventList.filter(event => event.id !== key)
+      localStorage.removeItem(id)
+      localStorage.removeItem(`${id}_callback`)
+      eventList = eventList.filter(event => event.id !== id)
     }
 
     const checkEvent = (event) => {
@@ -145,14 +143,14 @@ class ValidationService {
       const eventTime = setDate(event.time)
 
       if (eventTime <= nowDate) {
-        makeEvent(event.id, event.name, event.callback)
+        makeEvent(event)
       }
 
       const nextDay = setDate(nowDate.getTime() + dayMs)
 
       if (nowDate < eventTime && eventTime <= nextDay) {
         const timeout = eventTime - nowDate
-        const timeoutId = setTimeout(() => makeEvent(event.id, event.name, event.callback), timeout)
+        const timeoutId = setTimeout(() => makeEvent(event), timeout)
         eventList = eventList.map((item) => {
           if (item.id === event.id) {
             item.timeoutId = timeoutId
@@ -196,37 +194,40 @@ class ValidationService {
         return
       }
 
-      if (startTime) {
+      const setStartTime = () => {
         startTime = setDate(startTime)
       }
 
-      if (endTime) {
+      const setEndTime = () => {
         endTime = setDate(endTime)
       }
 
-      if (month) {
+      const getEventListByMonth = () => {
         startTime = new Date(getDate().getFullYear(), month - 1, 1)
         endTime = new Date(getDate().getFullYear(), month, 0)
       }
 
-      if (week) {
+      const getEventListByWeek = () => {
         startTime = setDate(getDate().getFirstDayWeek(week))
         endTime = setDate(getDate().getEndDayWeek(week))
       }
 
-      if (day) {
+      const getEventListByDay = () => {
         startTime = setDate(day)
         endTime = setDate(setDate(day).setHours(dayHour))
       }
 
-      const isValidStartTime = time => (startTime ? startTime <= time : true)
-      const isValidEndTime = time => (endTime ? time <= endTime : true)
-      const checkDate = time => isValidStartTime(time) && isValidEndTime(time)
+     startTime && setStartTime();
+     endTime && setEndTime();
+     month && getEventListByMonth();
+     week && getEventListByWeek();
+     day && getEventListByDay();
 
-      const searchEventList = eventList.filter(event => checkDate(setDate(event.time)))
+      const isAfterStart = time => (startTime ? startTime <= time : true)
+      const isBeforeEnd = time => (endTime ? time <= endTime : true)
+      const isInRange = time => isAfterStart(time) && isBeforeEnd(time)
 
-      return searchEventList.length === 0
-        ? console.log('No results were found for your search.') : searchEventList
+      return eventList.filter(event => isInRange(setDate(event.time)))
     }
 
     const deleteEvent = (id) => {
@@ -261,11 +262,8 @@ class ValidationService {
           }
         }
 
-        const changeName = oldName => newName || oldName
-        const changeTime = oldTime => newTime || oldTime
-
-        event.name = changeName(event.name)
-        event.time = changeTime(event.time)
+        event.name = newName || event.name
+        event.time = newTime || event.time
 
         localStorage.setItem(id, JSON.stringify({ name: event.name, time: event.time }))
 
