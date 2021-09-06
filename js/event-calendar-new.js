@@ -39,12 +39,17 @@ class ValidationService {
     return false
   }
 
-  isAddEvent (name, callback, time) {
+  isAddEvent (name, callback, time, id) {
     let result = true
     if (!name || typeof callback !== 'function' || !time) {
       console.error('You did not pass any of the parameters name or callback or time')
       result = false
     }
+    if (id && Object.keys(localStorage).includes(id)) {
+      console.error('An element with the same id already exists')
+      result = false
+    }
+
     if (this.#getDate() > this.#getDate(time)) {
       console.error('The specified callback date is less than the current date.')
       result = false
@@ -152,11 +157,11 @@ class ValidationService {
       setTimeout(timer, dayMs)
     }, 0)
 
-    const addEvent = (name, callback, time) => {
-      if (!validate.isAddEvent(name, callback, time)) {
+    const addEvent = (name, callback, time, id = null) => {
+      id = String(id || Math.ceil(Math.random() * 1000)); // generate ID
+      if (!validate.isAddEvent(name, callback, time, id)) {
         return
       }
-      const id = Math.ceil(Math.random() * 1000).toString() // generate ID
       localStorage.setItem(id, JSON.stringify({ name, time, callback: `${callback}` }))
       eventList.push({
         id, name, callback, time
@@ -170,7 +175,7 @@ class ValidationService {
     }
 
     const getEvent = (id) => {
-        id = typeof id === 'number' ? `${id}` : id
+        id = String(id || '')
         const eventKey = Object.keys(localStorage).find(key => key === id)
         if (!validate.isEvent(eventList, eventKey, id)) {
             return
@@ -227,7 +232,7 @@ class ValidationService {
     }
 
     const deleteEvent = (id) => {
-      id = typeof id === 'number' ? `${id}` : id
+      id = String(id || '')
       const event = eventList.find(item => item.id === id)
       if (!validate.isEvent(eventList, event, id)) {
         return
@@ -243,6 +248,7 @@ class ValidationService {
     }
 
     const changeEvent = ({ id, newName = null, newTime = null } = {}) => {
+      id = String(id || '')
       if (!validate.isChangeEvent(eventList, id)) {
         return
       }
