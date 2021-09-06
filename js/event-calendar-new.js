@@ -72,7 +72,7 @@ class ValidationService {
     return result
   }
 
-  isDeleteEvent (eventList, event, id) {
+  isEvent (eventList, event, id) {
     let result = true
     if (!this.#isId(id)) {
       result = false
@@ -102,27 +102,15 @@ class ValidationService {
 (() => {
   function library () {
     let eventList = []
+
     const validate = new ValidationService()
+
     if (localStorage.length !== 0) {
-      Object.keys(localStorage).map((key) => {
-        const id = parseInt(key, 10)
-        const eventIndex = eventList.findIndex(item => item.id === `${id}`)
-
-        if (!key.includes('callback')) {
-          const event = JSON.parse(localStorage.getItem(key))
-
-          if (eventIndex !== -1) {
-            eventList[eventIndex].name = event.name
-            eventList[eventIndex].time = event.time
-            return
-          }
-          eventList.push({ id: key, ...event })
-          return
-        }
-        if (eventIndex !== -1) {
-          eventList[eventIndex].callback = localStorage.getItem(key)
-        } else {
-          eventList.push({ id: `${id}`, callback: localStorage.getItem(key) })
+      Object.keys(localStorage).map((id) => {
+        const testId = parseInt(id, 10);
+        if (testId) {
+          const event = JSON.parse(localStorage.getItem(id))
+          eventList.push({id, ...event})
         }
       })
     }
@@ -134,7 +122,6 @@ class ValidationService {
       console.log(`Name of event is ${name}`)
       eval(callback)()
       localStorage.removeItem(id)
-      localStorage.removeItem(`${id}_callback`)
       eventList = eventList.filter(event => event.id !== id)
     }
 
@@ -170,17 +157,26 @@ class ValidationService {
         return
       }
       const id = Math.ceil(Math.random() * 1000).toString() // generate ID
-      localStorage.setItem(`${id}_callback`, `${callback}`)
-      localStorage.setItem(id, JSON.stringify({ name, time }))
+      localStorage.setItem(id, JSON.stringify({ name, time, callback: `${callback}` }))
       eventList.push({
         id, name, callback, time
       })
       checkEvent({
         id, name, callback, time
       })
-      return console.log({
+      return {
         id, name, callback, time
-      })
+      }
+    }
+
+    const getEvent = (id) => {
+        id = typeof id === 'number' ? `${id}` : id
+        const eventKey = Object.keys(localStorage).find(key => key === id)
+        if (!validate.isEvent(eventList, eventKey, id)) {
+            return
+        }
+        const event = JSON.parse(localStorage.getItem(eventKey))
+        return {id, ...event}
     }
 
     const getEventList = ({
@@ -233,18 +229,17 @@ class ValidationService {
     const deleteEvent = (id) => {
       id = typeof id === 'number' ? `${id}` : id
       const event = eventList.find(item => item.id === id)
-      if (!validate.isDeleteEvent(eventList, event, id)) {
+      if (!validate.isEvent(eventList, event, id)) {
         return
       }
 
       localStorage.removeItem(id)
-      localStorage.removeItem(`${id}_callback`)
       if (event.timeoutId) {
         clearTimeout(event.timeoutId)
       }
       eventList = eventList.filter(item => item.id !== id)
       console.log('You have deleted an event')
-      console.log({ ...event })
+      return event
     }
 
     const changeEvent = ({ id, newName = null, newTime = null } = {}) => {
@@ -282,12 +277,12 @@ class ValidationService {
         checkEvent(event)
 
         console.log('The event has been changed')
-        return console.log({ id, ...event })
+        return { id, ...event }
       }
       return console.error('You must have entered newName or newTime ')
     }
     return {
-      addEvent, getEventList, deleteEvent, changeEvent
+      addEvent, getEventList, deleteEvent, changeEvent, getEvent
     }
   }
 
