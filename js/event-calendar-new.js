@@ -2,8 +2,6 @@ const dayMs = 86400000
 const weekMs = 604800000
 const sixDaysMs = 518400000
 const dayHour = 24
-const monthYear = 12
-const weekYear = 53
 
 Date.prototype.getFirstDayWeek = (week) => {
   const firstJan = new Date(new Date().getFullYear(), 0, 1)
@@ -15,95 +13,6 @@ Date.prototype.getEndDayWeek = (week) => {
   return firstDayWeek + sixDaysMs
 }
 
-class ValidationService {
-  #getDate (time) {
-    if (time) {
-      return new Date(time)
-    }
-    return new Date()
-  }
-
-  #isId (id) {
-    if (!id) {
-      console.error('You have not entered an id')
-      return false
-    }
-    return true
-  }
-
-  #isEventListEmpty (eventList) {
-    if (eventList.length === 0) {
-      console.error('Event list is empty')
-      return true
-    }
-    return false
-  }
-
-  isAddEvent (name, callback, time, id) {
-    let result = true
-    if (!name || typeof callback !== 'function' || !time) {
-      console.error('You did not pass any of the parameters name or callback or time')
-      result = false
-    }
-    if (id && Object.keys(localStorage).includes(id)) {
-      console.error('An element with the same id already exists')
-      result = false
-    }
-
-    if (this.#getDate() > this.#getDate(time)) {
-      console.error('The specified callback date is less than the current date.')
-      result = false
-    }
-    return result
-  }
-
-  isGetEventList (eventList, startTime, endTime, week, month) {
-    let result = true
-    if (startTime > endTime) {
-      console.error('Start time is greater than end time. ')
-      result = false
-    }
-    if (month < 0 || month > monthYear) {
-      console.error('Enter the month from 1 to 12')
-      result = false
-    }
-    if (week < 0 || week > weekYear) {
-      console.error('Enter the week from 1 to 53')
-      result = false
-    }
-    if (this.#isEventListEmpty(eventList)) {
-      result = false
-    }
-    return result
-  }
-
-  isEvent (eventList, event, id) {
-    let result = true
-    if (!this.#isId(id)) {
-      result = false
-    }
-    if (!event) {
-      console.error('There is no event with this id')
-      result = false
-    }
-    if (this.#isEventListEmpty(eventList)) {
-      result = false
-    }
-    return result
-  }
-
-  isChangeEvent (eventList, id) {
-    let result = true
-    if (this.#isEventListEmpty(eventList)) {
-      result = false
-    }
-    if (!this.#isId(id)) {
-      result = false
-    }
-    return result
-  }
-}
-
 (() => {
   function library () {
     let eventList = []
@@ -112,18 +21,18 @@ class ValidationService {
 
     if (localStorage.length !== 0) {
       Object.keys(localStorage).map((id) => {
-        const testId = parseInt(id, 10);
+        const testId = parseInt(id, 10)
         if (testId) {
           const event = JSON.parse(localStorage.getItem(id))
-          eventList.push({id, ...event})
+          eventList.push({ id, ...event })
         }
       })
     }
 
-    const getDate = () => new Date()
-    const setDate = time => new Date(time)
+    const getCurrentDate = () => new Date()
+    const getNeedDate = time => new Date(time)
 
-    const makeEvent = ({id, name, callback}) => {
+    const makeEvent = ({ id, name, callback }) => {
       console.log(`Name of event is ${name}`)
       eval(callback)()
       localStorage.removeItem(id)
@@ -131,14 +40,14 @@ class ValidationService {
     }
 
     const checkEvent = (event) => {
-      const nowDate = getDate()
-      const eventTime = setDate(event.time)
+      const nowDate = getCurrentDate()
+      const eventTime = getNeedDate(event.time)
 
       if (eventTime <= nowDate) {
-        makeEvent(event)
+        return makeEvent(event)
       }
 
-      const nextDay = setDate(nowDate.getTime() + dayMs)
+      const nextDay = getNeedDate(nowDate.getTime() + dayMs)
 
       if (nowDate < eventTime && eventTime <= nextDay) {
         const timeout = eventTime - nowDate
@@ -158,30 +67,27 @@ class ValidationService {
     }, 0)
 
     const addEvent = (name, callback, time, id = null) => {
-      id = String(id || Math.ceil(Math.random() * 1000)); // generate ID
+      id = String(id || Math.ceil(Math.random() * 1000)) // generate ID
       if (!validate.isAddEvent(name, callback, time, id)) {
         return
       }
       localStorage.setItem(id, JSON.stringify({ name, time, callback: `${callback}` }))
-      eventList.push({
-        id, name, callback, time
-      })
-      checkEvent({
-        id, name, callback, time
-      })
-      return {
+      const event = {
         id, name, callback, time
       }
+      eventList.push({ ...event })
+      checkEvent(event)
+      return event
     }
 
     const getEvent = (id) => {
-        id = String(id || '')
-        const eventKey = Object.keys(localStorage).find(key => key === id)
-        if (!validate.isEvent(eventList, eventKey, id)) {
-            return
-        }
-        const event = JSON.parse(localStorage.getItem(eventKey))
-        return {id, ...event}
+      id = String(id || '')
+      const eventKey = Object.keys(localStorage).find(key => key === id)
+      if (!validate.isEvent(eventList, eventKey, id)) {
+        return
+      }
+      const event = JSON.parse(localStorage.getItem(eventKey))
+      return { id, ...event }
     }
 
     const getEventList = ({
@@ -196,39 +102,39 @@ class ValidationService {
       }
 
       const setStartTime = () => {
-        startTime = setDate(startTime)
+        startTime = getNeedDate(startTime)
       }
 
       const setEndTime = () => {
-        endTime = setDate(endTime)
+        endTime = getNeedDate(endTime)
       }
 
       const getEventListByMonth = () => {
-        startTime = new Date(getDate().getFullYear(), month - 1, 1)
-        endTime = new Date(getDate().getFullYear(), month, 0)
+        startTime = new Date(getCurrentDate().getFullYear(), month - 1, 1)
+        endTime = new Date(getCurrentDate().getFullYear(), month, 0)
       }
 
       const getEventListByWeek = () => {
-        startTime = setDate(getDate().getFirstDayWeek(week))
-        endTime = setDate(getDate().getEndDayWeek(week))
+        startTime = getNeedDate(getCurrentDate().getFirstDayWeek(week))
+        endTime = getNeedDate(getCurrentDate().getEndDayWeek(week))
       }
 
       const getEventListByDay = () => {
-        startTime = setDate(day)
-        endTime = setDate(setDate(day).setHours(dayHour))
+        startTime = getNeedDate(day)
+        endTime = getNeedDate(getNeedDate(day).setHours(dayHour))
       }
 
-     startTime && setStartTime();
-     endTime && setEndTime();
-     month && getEventListByMonth();
-     week && getEventListByWeek();
-     day && getEventListByDay();
+      startTime && setStartTime()
+      endTime && setEndTime()
+      month && getEventListByMonth()
+      week && getEventListByWeek()
+      day && getEventListByDay()
 
       const isAfterStart = time => (startTime ? startTime <= time : true)
       const isBeforeEnd = time => (endTime ? time <= endTime : true)
       const isInRange = time => isAfterStart(time) && isBeforeEnd(time)
 
-      return eventList.filter(event => isInRange(setDate(event.time)))
+      return eventList.filter(event => isInRange(getNeedDate(event.time)))
     }
 
     const deleteEvent = (id) => {
@@ -258,7 +164,7 @@ class ValidationService {
           return console.error('There is no event with this id')
         }
         if (newTime) {
-          if (getDate() > setDate(newTime)) {
+          if (getCurrentDate() > getNeedDate(newTime)) {
             return console.error('The new date is less than the current date, specify a different one.')
           }
         }
