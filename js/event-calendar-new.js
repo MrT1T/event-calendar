@@ -198,10 +198,5 @@ Date.prototype.getEndDayWeek = (week) => {
     }
   }
 
-  if
-  (typeof (eventCalendar) === 'undefined') {
-    window.eventCalendar = library()
-  } else {
-    console.log('Library already defined.')
-  }
+  window.eventCalendar = library()
 })()

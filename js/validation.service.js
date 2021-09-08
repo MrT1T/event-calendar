@@ -92,9 +92,15 @@ class ValidationService {
     }
 
     isAddRepeatEvent (name, callback, time, repeatDay) {
-        let result = this.isAddEvent(name, callback, time)
-        if (repeatDay < 0 || repeatDay > weekDay) {
-            console.error('Enter the day of week from 0 to 7')
+        let result = true
+
+        if (!name || !callback || !time) {
+            console.error('You did not pass any of the parameters name or callback or time')
+            result = false
+        }
+
+        if (repeatDay < 1 || repeatDay > weekDay) {
+            console.error('Enter the day of week from 1 to 7')
             result = false
         }
         return result

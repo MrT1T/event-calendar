@@ -1,68 +1,66 @@
-const PERIODICITY = 'periodicity'
-const weekDays = ['everyday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const dayMs = 86400000
+const weekMs = 604800000
+const dayWeek = 7
+const sunday = 7;
 
-(() => {
-  function module () {
-    let periodicity = {
-      sunday: [],
-      monday: [],
-      tuesday: [],
-      wednesday: [],
-      thursday: [],
-      friday: [],
-      saturday: [],
-      everyday: []
+((eventCalendar) => {
+  const validate = new ValidationService()
+
+  const getCurrentDate = () => new Date()
+  const getNeedDate = time => new Date(time)
+
+  const getNeedTime = (repeat, time) => {
+    const today = getCurrentDate()
+    const date = today.toDateString()
+    let needTime = `${date} ${time}`
+
+    if (getNeedDate(needTime) < today) {
+      const needDate = getNeedDate(today.getTime() + repeat).toDateString()
+      needTime = `${needDate} ${time}`
+    }
+    return needTime
+  }
+
+  eventCalendar.addEveryDayEvent = (name, callback, time) => {
+    if (!validate.isAddRepeatEvent(name, callback, time)) {
+      return
     }
 
-    const validate = new ValidationService()
+    const needTime = getNeedTime(dayMs, time)
 
-    if (localStorage.length === 0) {
-      localStorage.setItem(PERIODICITY, JSON.stringify(periodicity))
+    const everyDayCallback = () => {
+      eval(callback)()
+      eventCalendar.addEveryDayEvent(name, callback, time)
+    }
+
+    return eventCalendar.addEvent(name, everyDayCallback, needTime)
+  }
+
+  eventCalendar.addWeekDayEvent = (name, callback, time, weekDay = 0) => {
+    if (!validate.isAddRepeatEvent(name, callback, time, weekDay)) {
+      return
+    }
+
+    let needTime
+    const weekDayNow = getCurrentDate().getDay() || sunday
+
+    if (weekDayNow !== weekDay) {
+      const weekOffset = weekDayNow < weekDay
+        ? weekDay - weekDayNow
+        : dayWeek - weekDayNow + weekDay
+
+      const needDate = getNeedDate(getCurrentDate().getTime() + dayMs * weekOffset).toDateString()
+
+      needTime = `${needDate} ${time}`
     } else {
-      periodicity = JSON.parse(localStorage.getItem(PERIODICITY))
-      const today = new Date()
-      const weekDay = weekDays[today.getDay()]
-      const repeatEventList = periodicity[weekDay].concat(periodicity.everyday)
-      repeatEventList.map((event) => {
-        const isEvent = localStorage.getItem(event.id)
-        if (!isEvent) {
-          const {
-            name, callback, time, id
-          } = event
-          const dateString = today.toDateString()
-          const needTime = new Date(time).toLocaleTimeString()
-          let needDate = `${dateString} ${needTime}`
-          if (new Date(needDate) < today) {
-            needDate = new Date(today.getTime() + 1000)
-          }
-          setTimeout(() => window.eventCalendar.addEvent(name, callback, needDate, id), 0)
-        }
-      })
+      needTime = getNeedTime(weekMs, time)
     }
 
-    const addRepeatEvent = (name, callback, time, repeat) => {
-      if (!validate.isAddRepeatEvent(name, callback, time, repeat)) {
-        return
-      }
-      const event = window.eventCalendar.addEvent(name, callback, time)
-      if (event) {
-        periodicity[weekDays[repeat]].push({
-          id: event.id, name, callback: `${callback}`, time
-        })
-        localStorage.setItem(PERIODICITY, JSON.stringify(periodicity))
-      }
-      return event
+    const weekDayCallback = () => {
+      eval(callback)()
+      eventCalendar.addWeekDayEvent(name, callback, time, weekDay)
     }
 
-    return {
-      addRepeatEvent
-    }
+    return eventCalendar.addEvent(name, weekDayCallback, needTime)
   }
-
-  if
-  (typeof (updateCalendar) === 'undefined') {
-    window.updateCalendar = module()
-  } else {
-    console.log('Library already defined.')
-  }
-})()
+})(window.eventCalendar)
