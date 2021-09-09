@@ -45,7 +45,7 @@ class ValidationService {
         return result
     }
 
-    isGetEventList (eventList, startTime, endTime, week, month) {
+    isGetEventList (startTime, endTime, week, month) {
         let result = true
         if (startTime > endTime) {
             console.error('Start time is greater than end time. ')
@@ -57,9 +57,6 @@ class ValidationService {
         }
         if (week < 0 || week > weekYear) {
             console.error('Enter the week from 1 to 53')
-            result = false
-        }
-        if (this.#isEventListEmpty(eventList)) {
             result = false
         }
         return result
@@ -104,5 +101,37 @@ class ValidationService {
             result = false
         }
         return result
+    }
+
+    isPreEvents (callback, time) {
+        let result = true
+
+        if ( !callback || !time) {
+            console.error('You did not pass any of the parameters callback or time')
+            result = false
+        }
+
+        if (typeof callback !== 'function') {
+            console.error('The callback must be a function.')
+            result = false
+        }
+
+        if (typeof time !== 'number') {
+            console.error('The time must be a number in seconds.')
+            result = false
+        }
+
+        if (time < 0 ) {
+            console.error('Time cannot be negative')
+            result = false
+        }
+
+        return result
+    }
+
+    isPreEvent (id, callback, time) {
+
+        return !(!this.#isId(id) || !this.isPreEvents(callback, time));
+
     }
 }
