@@ -97,7 +97,7 @@ Date.prototype.getEndDayWeek = (week) => {
       week = null,
       month = null
     } = {}) => {
-      if (!validate.isGetEventList(eventList, startTime, endTime, week, month)) {
+      if (!validate.isGetEventList(startTime, endTime, week, month)) {
         return
       }
 
