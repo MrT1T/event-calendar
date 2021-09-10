@@ -103,7 +103,7 @@ class ValidationService {
         return result
     }
 
-    isPreEvents (callback, time) {
+    isEventsNotifications (callback, time) {
         let result = true
 
         if ( !callback || !time) {
@@ -129,9 +129,9 @@ class ValidationService {
         return result
     }
 
-    isPreEvent (id, callback, time) {
+    isEventNotification (id, callback, time) {
 
-        return !(!this.#isId(id) || !this.isPreEvents(callback, time));
+        return !(!this.#isId(id) || !this.isEventsNotifications(callback, time));
 
     }
 }
