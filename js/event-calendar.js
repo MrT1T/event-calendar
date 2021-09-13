@@ -149,7 +149,7 @@ Date.prototype.getEndDayWeek = (week) => {
         clearTimeout(event.timeoutId)
       }
       eventList = eventList.filter(item => item.id !== id)
-      console.log('You have deleted an event')
+
       return event
     }
 
@@ -188,7 +188,6 @@ Date.prototype.getEndDayWeek = (week) => {
 
         checkEvent(event)
 
-        console.log('The event has been changed')
         return { id, ...event }
       }
       return console.error('You must have entered newName or newTime ')

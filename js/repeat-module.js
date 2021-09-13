@@ -1,26 +1,26 @@
-const dayWeek = 7
+const daysWeek = 7
 const sunday = 7;
 
 ((eventCalendar) => {
   const validate = new ValidationService()
 
   const getCurrentDate = () => new Date()
-  const getNeedDate = time => new Date(time)
+  const getDate = time => new Date(time)
 
   const getNeedTime = (repeat, time) => {
     const today = getCurrentDate()
     const date = today.toDateString()
     let needTime = `${date} ${time}`
 
-    if (getNeedDate(needTime) < today) {
-      const needDate = getNeedDate(today.getTime() + repeat).toDateString()
+    if (getDate(needTime) < today) {
+      const needDate = getDate(today.getTime() + repeat).toDateString()
       needTime = `${needDate} ${time}`
     }
     return needTime
   }
 
   eventCalendar.addEveryDayEvent = (name, callback, time) => {
-    if (!validate.isAddRepeatEvent(name, callback, time)) {
+    if (!validate.isEveryDayEvent(name, callback, time)) {
       return
     }
 
@@ -34,31 +34,33 @@ const sunday = 7;
     return eventCalendar.addEvent(name, everyDayCallback, needTime)
   }
 
-  eventCalendar.addWeekDayEvent = (name, callback, time, weekDay = 0) => {
-    if (!validate.isAddRepeatEvent(name, callback, time, weekDay)) {
+  eventCalendar.addWeekDayEvent = (name, callback, time, weekDays = []) => {
+    if (!validate.isAddRepeatEvent(name, callback, time, weekDays)) {
       return
     }
 
     let needTime
-    const weekDayNow = getCurrentDate().getDay() || sunday
+    const currentWeekDay = getCurrentDate().getDay() || sunday
 
-    if (weekDayNow !== weekDay) {
-      const weekOffset = weekDayNow < weekDay
-        ? weekDay - weekDayNow
-        : dayWeek - weekDayNow + weekDay
+    weekDays.map((weekDay) => {
+      if (currentWeekDay !== weekDay) {
+        const weekOffset = currentWeekDay < weekDay
+          ? weekDay - currentWeekDay
+          : daysWeek - currentWeekDay + weekDay
 
-      const needDate = getNeedDate(getCurrentDate().getTime() + dayMs * weekOffset).toDateString()
+        const needDate = getDate(getCurrentDate().getTime() + dayMs * weekOffset).toDateString()
 
-      needTime = `${needDate} ${time}`
-    } else {
-      needTime = getNeedTime(weekMs, time)
-    }
+        needTime = `${needDate} ${time}`
+      } else {
+        needTime = getNeedTime(weekMs, time)
+      }
 
-    const weekDayCallback = () => {
-      eval(callback)()
-      eventCalendar.addWeekDayEvent(name, callback, time, weekDay)
-    }
+      const weekDayCallback = () => {
+        eval(callback)()
+        eventCalendar.addWeekDayEvent(name, callback, time, weekDay)
+      }
 
-    return eventCalendar.addEvent(name, weekDayCallback, needTime)
+      return eventCalendar.addEvent(name, weekDayCallback, needTime)
+    })
   }
 })(window.eventCalendar)
