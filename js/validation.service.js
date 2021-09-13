@@ -26,10 +26,19 @@ class ValidationService {
         return false
     }
 
+    #isValidDate (time) {
+        return  !isNaN(this.#getDate(time));
+    }
+
     isAddEvent (name, callback, time, id) {
         let result = true
         if (!name || !callback || !time) {
             console.error('You did not pass any of the parameters name or callback or time')
+            result = false
+        }
+
+        if (!this.#isValidDate(time)) {
+            console.error("The date isn't valid")
             result = false
         }
 
@@ -88,6 +97,14 @@ class ValidationService {
         return result
     }
 
+    isEveryDayEvent (name, callback, time) {
+        if (!name || !callback || !time) {
+            console.error('You did not pass any of the parameters name or callback or time')
+            return false
+        }
+        return true
+    }
+
     isAddRepeatEvent (name, callback, time, repeatDay) {
         let result = true
 
@@ -96,8 +113,8 @@ class ValidationService {
             result = false
         }
 
-        if (repeatDay < 1 || repeatDay > weekDay) {
-            console.error('Enter the day of week from 1 to 7')
+        if (!repeatDay.find(day => day > 1 || day < weekDay)) {
+            console.error('The parameter for the selected days of the week must be an array of numbers from 1 to 7')
             result = false
         }
         return result
